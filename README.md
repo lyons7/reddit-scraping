@@ -1,2 +1,6 @@
 # reddit-scraping
-Using PRAW to scrape Reddit data
+Using PRAW to scrape Reddit data!
+
+I'm trying to figure out the best way to scrape Reddit and get a clear read of comments and subcomments -- the way the API works is that it gives you top level comments first, then comments under those, and then comments under THOSE. You can keep track of these with their id and parent id, but it's tricky to get a dataframe that is the entire thread in subsequent rows...
+
+There's [this](https://pythonprogramming.net/parsing-comments-python-reddit-api-wrapper-praw-tutorial/) solution, but it only gets you the first level of replies. I'd like to do this for ALL of them...
