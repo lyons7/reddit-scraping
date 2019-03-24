@@ -3,6 +3,7 @@ import pandas as pd
 import praw
 import csv
 from psaw import PushshiftAPI
+from datetime import datetime
 
 api = PushshiftAPI()
 
@@ -11,7 +12,7 @@ api = PushshiftAPI()
 # Import credentials
 # Put this in our database_exists
 import os
-os.chdir("/Users/katelyons/Documents/Reddit")
+os.chdir("/Users/katelyons/Documents/Reddit/reddit-scraping/")
 from reddit import client_id, client_secret, user_agent
 
 reddit = praw.Reddit(client_id = client_id,
@@ -71,8 +72,8 @@ else:
     print('Not there')
 
 # Start with a smaller thread so it's easier to visualize?
-submission = reddit.submission(url='https://www.reddit.com/r/opera/comments/awqd0c/starting_to_read_about_the_history_of_opera_and/')
-
+submission = reddit.submission(url='https://www.reddit.com/r/childfree/comments/8y8sls/the_gender_pay_gap_is_largely_because_of/')
+submission.
 # Number of parent comments you want to go through
 len(submission.comments)
 
@@ -86,9 +87,13 @@ comment_id = []
 text = []
 parent_id = []
 is_reply = []
+author = []
+date = []
 for comment in submission.comments.list():
     comment_id.append(comment)
     text.append(comment.body)
+    author.append(comment.author)
+    date.append(comment.created_utc)
     adj_id = comment.parent_id.split("_",1)[1]
     parent_id.append(adj_id)
     if adj_id in comment_id:
@@ -99,13 +104,18 @@ for comment in submission.comments.list():
 data = pd.DataFrame({'text': text,
                        'comment_id': comment_id,
                        'parent_id': parent_id,
-                       'is_reply': is_reply})
+                       'is_reply': is_reply,
+                       'author': author,
+                       'date': date})
 
-data.sort_values(by=['parent_id','comment_id'])
+data.date = pd.to_datetime(data.date, unit = 's')
 
-data.comment_id = data.comment_id.astype('str')
-data.info()
-data.to_csv('the_real_cause_of_the_wage_gap.csv', sep = ',')
+# data.sort_values(by=['parent_id','comment_id'])
+
+# data.comment_id = data.comment_id.astype('str')
+data
+data.to_csv('the_gender_pay_gap_is_largely_because_of_motherhood.csv', sep = ',')
+
 
 # Get all replies for one comment
 submission.comments.list()[0].replies[0].replies[0].body
@@ -174,10 +184,10 @@ for x in conversedict:
     print(x)
 
 
-redditWriter = csv.writer(open('the_real_cause_of_the_wage_gap.csv', 'w'), delimiter=',')
+# redditWriter = csv.writer(open('the_real_cause_of_the_wage_gap.csv', 'w'), delimiter=',')
 
-for comment in submission.comments.list():
-    redditWriter.writerow([comment.body.encode('ascii', 'ignore').decode('ascii')])
+# for comment in submission.comments.list():
+    # redditWriter.writerow([comment.body.encode('ascii', 'ignore').decode('ascii')])
 
 # Current problem is CSV is weird, doesn't match up one comment per row
 # Also want to check for responses to comments, sub comments
@@ -200,3 +210,5 @@ process_comments(submission.comments)
 
 
 # Try pushshift for more comments?
+
+import numpy as np
