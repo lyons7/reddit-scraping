@@ -36,7 +36,8 @@ submission = reddit.submission(url='https://www.reddit.com/r/childfree/comments/
 # Iterate through all comments - help from here: https://praw.readthedocs.io/en/latest/tutorials/comments.html#extracting-comments
 submission.comments.replace_more(limit=None)
 for comment in submission.comments.list():
-    print(comment.body)
+    print (comment.body)
+    # print(comment.replies.list())
 
 # Access stuff in the tree
 submission.comments.list()[1].replies[1].body
@@ -212,3 +213,104 @@ process_comments(submission.comments)
 # Try pushshift for more comments?
 
 import numpy as np
+
+
+
+# OK NOW LET'S TRY TO GET ALL THE REPLIES
+submission = reddit.submission(url='https://www.reddit.com/r/opera/comments/b1xus9/unpopular_opinion_ropera_edition_the_met_is_where/')
+submission.comments[0].is_root
+submission.comments[0].depth
+submission.comments.list()
+
+submission.comments.replace_more(limit=None)
+for top_level_comment in submission.comments:
+    for second_level_comment in top_level_comment.replies:
+        print(second_level_comment.body)
+
+# Figuring out how to get actual order
+for comment in submission.comments.list():
+    comment.replies.replace_more(limit=None)
+    if comment.is_root == True:
+        print (comment.body)
+        for reply in comment.replies.list():
+            reply.replies.replace_more(limit=None)
+            print (reply.body)
+            for reply2 in reply.replies.list():
+                print (reply2.body)
+
+# DIRTY GROSS WRONG VERSION -- JUST TO GET STUFF AT THE MOMENT
+def get_all_commentsdf(submission):
+    submission.comments.replace_more(limit=None)
+    comment_id = []
+    text = []
+    parent_id = []
+    is_reply = []
+    is_submitter = []
+    author = []
+    date = []
+    for comment in submission.comments.list():
+        comment.replies.replace_more(limit=None)
+        if comment.is_root == True:
+            comment_id.append(comment)
+            text.append(comment.body)
+            author.append(comment.author)
+            date.append(comment.created_utc)
+            is_submitter.append(comment.is_submitter)
+            adj_id = comment.parent_id.split("_",1)[1]
+            parent_id.append(adj_id)
+            if adj_id in comment_id:
+                is_reply.append(True)
+            else:
+                is_reply.append(False)
+            # for replies
+            for reply in comment.replies.list():
+                if reply.id not in comment_id:
+                    reply.replies.replace_more(limit = None)
+                    comment_id.append(reply)
+                    text.append(reply.body)
+                    author.append(reply.author)
+                    date.append(reply.created_utc)
+                    is_submitter.append(reply.is_submitter)
+                    adj_id = reply.parent_id.split("_",1)[1]
+                    parent_id.append(adj_id)
+                    if adj_id in comment_id:
+                        is_reply.append(True)
+                    else:
+                        is_reply.append(False)
+                    # For replies of replies
+                    for reply2 in reply.replies.list():
+                        if reply2.id not in comment_id:
+                            comment_id.append(reply2)
+                            text.append(reply2.body)
+                            author.append(reply2.author)
+                            date.append(reply2.created_utc)
+                            is_submitter.append(reply2.is_submitter)
+                            adj_id = reply2.parent_id.split("_",1)[1]
+                            parent_id.append(adj_id)
+                            if adj_id in comment_id:
+                                is_reply.append(True)
+                            else:
+                                is_reply.append(False)
+
+    data = pd.DataFrame({'text': text,
+                           'comment_id': comment_id,
+                           'parent_id': parent_id,
+                           'is_reply': is_reply,
+                           'is_submitter': is_submitter,
+                           'author': author,
+                           'date': date})
+
+    data.date = pd.to_datetime(data.date, unit = 's')
+    return data
+
+# data = data.drop_duplicates()
+data = get_all_commentsdf(submission)
+data.to_csv('unpopular_opinion_ropera_edition_the_met_is_where.csv', sep = ',', index = False, encoding = 'utf-8')
+
+data.to_csv('the_real_cause_of_the_wage_gap.csv', sep = ',')
+
+data.to_csv('unpopular_opinion_ropera_edition_the_met_is_where.csv', sep = ',', index = False, encoding = 'utf-8')
+
+submission = reddit.submission(url='https://www.reddit.com/r/childfree/comments/awi5vj/the_real_cause_of_the_wage_gap/')
+the_real_cause_of_the_wage_gap = get_all_commentsdf(submission)
+data.to_csv('the_real_cause_of_the_wage_gap.csv', sep = ',', index = False)
