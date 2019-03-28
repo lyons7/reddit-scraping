@@ -305,6 +305,7 @@ def get_all_commentsdf(submission):
 
 # data = data.drop_duplicates()
 data = get_all_commentsdf(submission)
+data
 data.to_csv('unpopular_opinion_ropera_edition_the_met_is_where.csv', sep = ',', index = False, encoding = 'utf-8')
 
 data.to_csv('the_real_cause_of_the_wage_gap.csv', sep = ',')
